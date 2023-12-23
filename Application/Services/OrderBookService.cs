@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Entities;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,12 @@ namespace Application.Services
     public class OrderBookService : IOrderBookService
     {
         private readonly OrderBookContext _dbContext;
+        private readonly MatchingEngine _matchingEngine;
 
-        public OrderBookService(OrderBookContext dbContext)
+        public OrderBookService(OrderBookContext dbContext, MatchingEngine matchingEngine)
         {
             _dbContext = dbContext;
+            _matchingEngine = matchingEngine;
         }
 
         public OrderBook GetOrderBook()
@@ -32,6 +35,9 @@ namespace Application.Services
             order.OrderType = OrderType.Buy;
             _dbContext.Orders.Add(order);
             _dbContext.SaveChanges();
+
+            // Match orders after placing a buy order
+            _matchingEngine.MatchOrders();
         }
 
         public void PlaceSellOrder(Order order)
@@ -39,6 +45,9 @@ namespace Application.Services
             order.OrderType = OrderType.Sell;
             _dbContext.Orders.Add(order);
             _dbContext.SaveChanges();
+
+            // Match orders after placing a sell order
+            _matchingEngine.MatchOrders();
         }
 
         public void UpdateOrder(int orderId, Order updatedOrder)
