@@ -38,7 +38,7 @@ public class OrderBookController : ControllerBase
     {
         try
         {
-            var orderBook = _orderBookQueryHandler.Handle(new OrderBookQuery());
+            var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
             return Ok(orderBook);
         }
         catch (Exception ex)
@@ -114,7 +114,7 @@ public class OrderBookController : ControllerBase
 
     private async void NotifyOrderBookUpdate()
     {
-        var orderBook = _orderBookQueryHandler.Handle(new OrderBookQuery());
+        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
         await _orderBookHubContext.Clients.All.SendAsync("ReceiveOrderBookUpdate", orderBook);
     }
 }

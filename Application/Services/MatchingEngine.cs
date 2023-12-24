@@ -1,5 +1,6 @@
 ﻿using Entities;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,34 +18,60 @@ namespace Application.Services
             _dbContext = dbContext;
         }
 
-        public void MatchOrders()
+        public async Task MatchOrders()
         {
-            // Get all buy and sell orders from the database
-            var buyOrders = _dbContext.Orders.Where(o => o.OrderType == OrderType.Buy).OrderByDescending(o => o.Price).ThenBy(o => o.CreatedAt).ToList();
-            var sellOrders = _dbContext.Orders.Where(o => o.OrderType == OrderType.Sell).OrderBy(o => o.Price).ThenBy(o => o.CreatedAt).ToList();
+            var buyOrdersTask = _dbContext.Orders
+                .Where(o => o.OrderType == OrderType.Buy)
+                .OrderByDescending(o => o.Price)
+                .ThenBy(o => o.CreatedAt)
+                .ToListAsync();
 
-            // Match buy and sell orders
-            foreach (var buyOrder in buyOrders)
+            var sellOrdersTask = _dbContext.Orders
+                .Where(o => o.OrderType == OrderType.Sell)
+                .OrderBy(o => o.Price)
+                .ThenBy(o => o.CreatedAt)
+                .ToListAsync();
+
+            await Task.WhenAll(buyOrdersTask, sellOrdersTask);
+
+            var buyOrders = buyOrdersTask.Result;
+            var sellOrders = sellOrdersTask.Result;
+
+            // Now you can use buyOrders and sellOrders as needed
+
+
+            buyOrders.Sort((a, b) => b.Price.CompareTo(a.Price) != 0 ? b.Price.CompareTo(a.Price) : a.CreatedAt.CompareTo(b.CreatedAt));
+            sellOrders.Sort((a, b) => a.Price.CompareTo(b.Price) != 0 ? a.Price.CompareTo(b.Price) : a.CreatedAt.CompareTo(b.CreatedAt));
+
+            int buyIndex = 0;
+            int sellIndex = 0;
+
+            while (buyIndex < buyOrders.Count && sellIndex < sellOrders.Count)
             {
-                foreach (var sellOrder in sellOrders)
+                var buyOrder = buyOrders[buyIndex];
+                var sellOrder = sellOrders[sellIndex];
+
+                if (sellOrder.Price <= buyOrder.Price)
                 {
-                    if (sellOrder.Price <= buyOrder.Price)
-                    {
-                        // Match found, execute the trade
-                        ExecuteTrade(buyOrder, sellOrder);
+                    // Match found, execute the trade
+                    await ExecuteTrade(buyOrder, sellOrder);
 
-                        // Remove matched orders from the lists
-                        buyOrders.Remove(buyOrder);
-                        sellOrders.Remove(sellOrder);
-
-                        // Continue matching with the next buy order
-                        break;
-                    }
+                    // Remove matched orders from the lists
+                    buyOrders.RemoveAt(buyIndex);
+                    sellOrders.RemoveAt(sellIndex);
+                }
+                else
+                {
+                    // No match, move to the next sell order
+                    sellIndex++;
                 }
             }
+
+            // The remaining unmatched orders (if any) are still in buyOrders and sellOrders
+
         }
 
-        private void ExecuteTrade(Order buyOrder, Order sellOrder)
+        private async Task ExecuteTrade(Order buyOrder, Order sellOrder)
         {
             // Perform trade execution logic, update quantities, etc.
             // For simplicity, this example assumes a complete match, and the entire quantities are traded.
@@ -67,7 +94,7 @@ namespace Application.Services
             }
 
             // Save changes to the database
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
     }
 

@@ -1,7 +1,11 @@
-﻿using Application.Interfaces;
+﻿using Application.CustomExceptions;
+using Application.Interfaces;
+using AutoMapper;
+using DTOs;
 using Entities;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using OrderBook.API.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,67 +16,89 @@ namespace Application.Services
 {
     public class OrderBookService : IOrderBookService
     {
+        private readonly IMapper _mapper;
         private readonly OrderBookContext _dbContext;
         private readonly MatchingEngine _matchingEngine;
 
-        public OrderBookService(OrderBookContext dbContext, MatchingEngine matchingEngine)
+        public OrderBookService(OrderBookContext dbContext, MatchingEngine matchingEngine, IMapper mapper)
         {
+            _mapper = mapper;
             _dbContext = dbContext;
             _matchingEngine = matchingEngine;
         }
 
-        public OrderBook GetOrderBook()
+        public async Task<OrderBookModel> GetOrderBook()
         {
-            return new OrderBook
+            var buyOrdersTask = _dbContext.Orders
+                                          .Where(o => o.OrderType == OrderType.Buy)
+                                          .ToListAsync();
+
+            var sellOrdersTask = _dbContext.Orders
+                                           .Where(o => o.OrderType == OrderType.Sell)
+                                           .ToListAsync();
+
+            await Task.WhenAll(buyOrdersTask, sellOrdersTask);
+
+            var orderBook = new OrderBookModel
             {
-                BuyOrders = _dbContext.Orders.Where(o => o.OrderType == OrderType.Buy).ToList(),
-                SellOrders = _dbContext.Orders.Where(o => o.OrderType == OrderType.Sell).ToList()
+                BuyOrders = _mapper.Map<IEnumerable<ReadOrderDto>>(buyOrdersTask.Result),
+                SellOrders = _mapper.Map<IEnumerable<ReadOrderDto>>(sellOrdersTask.Result)
             };
+
+            return orderBook;
         }
 
-        public void PlaceBuyOrder(Order order)
+        public async Task<ReadOrderDto> PlaceBuyOrder(WriteOrderDto order)
         {
             order.OrderType = OrderType.Buy;
-            _dbContext.Orders.Add(order);
-            _dbContext.SaveChanges();
 
-            // Match orders after placing a buy order
+            var theOrder = await _dbContext.Orders.AddAsync(_mapper.Map<Order>(order));
+
+            await _dbContext.SaveChangesAsync();
+
             _matchingEngine.MatchOrders();
+            
+            return _mapper.Map<ReadOrderDto>(theOrder);
         }
 
-        public void PlaceSellOrder(Order order)
+        public async Task<ReadOrderDto> PlaceSellOrder(WriteOrderDto order)
         {
             order.OrderType = OrderType.Sell;
-            _dbContext.Orders.Add(order);
-            _dbContext.SaveChanges();
 
-            // Match orders after placing a sell order
+            var theOrder = await _dbContext.Orders.AddAsync(_mapper.Map<Order>(order));
+
+            await _dbContext.SaveChangesAsync();
+
+             _matchingEngine.MatchOrders();
+
+            return _mapper.Map<ReadOrderDto>(theOrder);
+        }
+
+        public async Task<WriteOrderDto> UpdateOrder(int orderId, WriteOrderDto updatedOrder)
+        {
+            var orderToUpdate = await _dbContext.Orders
+                                                .FirstOrDefaultAsync(o => o.OrderId == orderId)
+                                                ?? throw new OrderNotFoundException(orderId);
+
+            orderToUpdate.Quantity = updatedOrder.Quantity;
+            orderToUpdate.Price = updatedOrder.Price;
+
+            await _dbContext.SaveChangesAsync();
+
             _matchingEngine.MatchOrders();
+
+            return updatedOrder;
         }
 
-        public void UpdateOrder(int orderId, Order updatedOrder)
+        public async Task<bool> DeleteOrder(int orderId)
         {
-            var orderToUpdate = _dbContext.Orders.FirstOrDefault(o => o.OrderId == orderId);
+            var orderToDelete = await _dbContext.Orders
+                                          .FirstOrDefaultAsync(o => o.OrderId == orderId)
+                                          ?? throw new OrderNotFoundException(orderId);
 
-            if (orderToUpdate != null)
-            {
-                // Update order properties as needed
-                orderToUpdate.Quantity = updatedOrder.Quantity;
-                orderToUpdate.Price = updatedOrder.Price;
-
-                _dbContext.SaveChanges();
-            }
-        }
-
-        public void DeleteOrder(int orderId)
-        {
-            var orderToDelete = _dbContext.Orders.FirstOrDefault(o => o.OrderId == orderId);
-
-            if (orderToDelete != null)
-            {
                 _dbContext.Orders.Remove(orderToDelete);
-                _dbContext.SaveChanges();
-            }
+
+                return await _dbContext.SaveChangesAsync() > 0 ? true : false;
         }
     }
 

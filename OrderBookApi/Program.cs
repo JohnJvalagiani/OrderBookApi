@@ -1,4 +1,6 @@
+using Application.Profiles;
 using Infrastructure.Database;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using OrderBook.API.SignalRHub;
@@ -16,6 +18,7 @@ builder.Services.AddDbContext<OrderBookContext>(options =>
 var app = builder.Build();
 
 builder.Services.AddSignalR();
+builder.Services.AddAutoMapper(typeof(OrderProfile).Assembly);
 
 if (app.Environment.IsDevelopment())
 {

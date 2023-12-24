@@ -12,9 +12,9 @@ namespace OrderBook.API.QueryHandlers
             _orderBookService = orderBookService;
         }
 
-        public OrderBookResponse Handle(OrderBookQuery query)
+        public  OrderBookResponse HandleAsync(OrderBookQuery query)
         {
-            var orderBook = _orderBookService.GetOrderBook();
+            var orderBook =  _orderBookService.GetOrderBook().Result;
             return new OrderBookResponse
             {
                 BuyOrders = orderBook.BuyOrders,
