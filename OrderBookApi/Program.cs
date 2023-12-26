@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using OrderBook.API.SignalRHub;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,14 +13,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<OrderBookContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("OrderBookDatabase"))
+            options.UseNpgsql(builder.Configuration.GetConnectionString("OrderBookConnection"))
         );
-
-
-var app = builder.Build();
 
 builder.Services.AddSignalR();
 builder.Services.AddAutoMapper(typeof(OrderProfile).Assembly);
+
+var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {

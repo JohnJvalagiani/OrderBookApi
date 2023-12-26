@@ -10,6 +10,10 @@ namespace Infrastructure.Database
 {
     public class OrderBookContext : DbContext
     {
+        public OrderBookContext(DbContextOptions<OrderBookContext> options) : base(options)
+        {
+                
+        }
         public DbSet<Order> Orders { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
