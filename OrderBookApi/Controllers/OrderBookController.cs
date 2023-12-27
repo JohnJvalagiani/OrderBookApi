@@ -6,8 +6,8 @@ using OrderBook.API.Models.QueryModels;
 using OrderBook.API.QueryHandlers;
 using OrderBook.API.SignalRHub;
 
+[Route("api/[controller]")]
 [ApiController]
-[Route("api/orderbook")]
 public class OrderBookController : ControllerBase
 {
     private readonly ICommandHandler<PlaceBuyOrderCommand> _placeBuyOrderCommandHandler;
@@ -34,87 +34,51 @@ public class OrderBookController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<OrderBookResponse> GetOrderBook()
+    public async Task<ActionResult<OrderBookResponse>> GetOrderBook()
     {
-        try
-        {
-            var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
+
+        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
+        
+        await _orderBookHubContext.Clients.All.SendAsync("message", "orderBook");
+
             return Ok(orderBook);
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            return StatusCode(500, "Internal Server Error");
-        }
     }
 
     [HttpPost("buy")]
     public ActionResult PlaceBuyOrder(PlaceBuyOrderCommand command)
     {
-        try
-        {
             _placeBuyOrderCommandHandler.Handle(command);
             NotifyOrderBookUpdate();
             return Ok();
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            return StatusCode(500, "Internal Server Error");
-        }
     }
 
     [HttpPost("sell")]
     public ActionResult PlaceSellOrder(PlaceSellOrderCommand command)
     {
-        try
-        {
             _placeSellOrderCommandHandler.Handle(command);
             NotifyOrderBookUpdate();
             return Ok();
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            return StatusCode(500, "Internal Server Error");
-        }
     }
 
     [HttpPut("update")]
     public ActionResult UpdateOrder(UpdateOrderCommand command)
     {
-        try
-        {
             _updateOrderCommandHandler.Handle(command);
             NotifyOrderBookUpdate();
             return Ok();
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            return StatusCode(500, "Internal Server Error");
-        }
     }
 
     [HttpDelete("delete/{orderId}")]
-    public ActionResult DeleteOrder(string orderId)
+    public ActionResult DeleteOrder(int orderId)
     {
-        try
-        {
             _deleteOrderCommandHandler.Handle(new DeleteOrderCommand { OrderId = orderId });
             NotifyOrderBookUpdate();
             return Ok();
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            return StatusCode(500, "Internal Server Error");
-        }
     }
 
-    private async void NotifyOrderBookUpdate()
+    private async Task NotifyOrderBookUpdate()
     {
-        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
-        await _orderBookHubContext.Clients.All.SendAsync("ReceiveOrderBookUpdate", orderBook);
+        var orderBook =  _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
+        await _orderBookHubContext.Clients.All.SendAsync("SendOrderBookUpdate", "aah");
     }
 }

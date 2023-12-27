@@ -20,25 +20,20 @@ namespace Application.Services
 
         public async Task MatchOrders()
         {
-            var buyOrdersTask = _dbContext.Orders
+            var buyOrdersTask =  _dbContext.Orders
                 .Where(o => o.OrderType == OrderType.Buy)
                 .OrderByDescending(o => o.Price)
                 .ThenBy(o => o.CreatedAt)
-                .ToListAsync();
+                .ToList();
 
-            var sellOrdersTask = _dbContext.Orders
+            var sellOrdersTask =  _dbContext.Orders
                 .Where(o => o.OrderType == OrderType.Sell)
                 .OrderBy(o => o.Price)
                 .ThenBy(o => o.CreatedAt)
-                .ToListAsync();
+                .ToList();
 
-            await Task.WhenAll(buyOrdersTask, sellOrdersTask);
-
-            var buyOrders = buyOrdersTask.Result;
-            var sellOrders = sellOrdersTask.Result;
-
-            // Now you can use buyOrders and sellOrders as needed
-
+            var buyOrders = buyOrdersTask;
+            var sellOrders = sellOrdersTask;
 
             buyOrders.Sort((a, b) => b.Price.CompareTo(a.Price) != 0 ? b.Price.CompareTo(a.Price) : a.CreatedAt.CompareTo(b.CreatedAt));
             sellOrders.Sort((a, b) => a.Price.CompareTo(b.Price) != 0 ? a.Price.CompareTo(b.Price) : a.CreatedAt.CompareTo(b.CreatedAt));
@@ -67,22 +62,16 @@ namespace Application.Services
                 }
             }
 
-            // The remaining unmatched orders (if any) are still in buyOrders and sellOrders
 
         }
 
         private async Task ExecuteTrade(Order buyOrder, Order sellOrder)
         {
-            // Perform trade execution logic, update quantities, etc.
-            // For simplicity, this example assumes a complete match, and the entire quantities are traded.
-
             decimal tradeQuantity = Math.Min(buyOrder.Quantity, sellOrder.Quantity);
 
-            // Update quantities
             buyOrder.Quantity -= tradeQuantity;
             sellOrder.Quantity -= tradeQuantity;
 
-            // Remove orders with zero quantity
             if (buyOrder.Quantity == 0)
             {
                 _dbContext.Orders.Remove(buyOrder);
@@ -93,7 +82,6 @@ namespace Application.Services
                 _dbContext.Orders.Remove(sellOrder);
             }
 
-            // Save changes to the database
             await _dbContext.SaveChangesAsync();
         }
     }

@@ -3,9 +3,9 @@ using OrderBook.API.Models.CommandModels;
 
 namespace OrderBook.API.Validators
 {
-    public class CreateProductCommandValidator : AbstractValidator<PlaceBuyOrderCommand>
+    public class UpdateOrderValidator : AbstractValidator<UpdateOrderCommand>
     {
-        public CreateProductCommandValidator()
+        public UpdateOrderValidator()
         {
             RuleFor(x => x.UserId)
                 .NotEmpty().WithMessage("UserId is required.")
@@ -16,6 +16,9 @@ namespace OrderBook.API.Validators
 
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("Price must be greater than 0.");
+
+            RuleFor(x => x.OrderType)
+                .NotNull().WithMessage("OrderType is required");
         }
     }
 

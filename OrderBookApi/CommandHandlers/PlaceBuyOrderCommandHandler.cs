@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Azure.Identity;
 using FluentValidation;
 using OrderBook.API.DTOs;
 using OrderBook.API.Models.CommandModels;
@@ -16,7 +17,6 @@ namespace OrderBook.API.CommandHandlers
             _validator = validator;
             _orderBookService = orderBookService;
         }
-
         public void Handle(PlaceBuyOrderCommand command)
         {
             var validationResult =  _validator.ValidateAsync(command).Result;

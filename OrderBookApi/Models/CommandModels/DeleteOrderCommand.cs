@@ -2,6 +2,6 @@
 {
     public class DeleteOrderCommand
     {
-        public string OrderId { get; set; }
+        public int OrderId { get; set; }
     }
 }
