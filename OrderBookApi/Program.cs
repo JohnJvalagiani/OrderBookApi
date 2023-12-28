@@ -45,7 +45,7 @@ builder.Services.AddScoped<IValidator<UpdateOrderCommand>, UpdateOrderValidator>
 //});
 
 var app = builder.Build();
-
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -59,6 +59,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-//app.UseExceptionMiddleware(); // Move this line after the MapControllers
+
 
 await app.RunAsync();

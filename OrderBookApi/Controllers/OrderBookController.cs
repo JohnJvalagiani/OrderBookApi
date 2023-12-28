@@ -5,6 +5,8 @@ using OrderBook.API.Models.CommandModels;
 using OrderBook.API.Models.QueryModels;
 using OrderBook.API.QueryHandlers;
 using OrderBook.API.SignalRHub;
+using Newtonsoft.Json;
+using Entities;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -38,8 +40,7 @@ public class OrderBookController : ControllerBase
     {
 
         var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
-        
-        await _orderBookHubContext.Clients.All.SendAsync("message", "orderBook");
+       
 
             return Ok(orderBook);
     }
@@ -78,7 +79,8 @@ public class OrderBookController : ControllerBase
 
     private async Task NotifyOrderBookUpdate()
     {
-        var orderBook =  _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
-        await _orderBookHubContext.Clients.All.SendAsync("SendOrderBookUpdate", "aah");
+        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
+        var OrdersJson = JsonConvert.SerializeObject(orderBook);
+        await _orderBookHubContext.Clients.All.SendAsync("ReceiveMessage", OrdersJson);
     }
 }

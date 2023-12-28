@@ -29,6 +29,7 @@ namespace Application.Services
 
         public async Task<OrderBookModel> GetOrderBook()
         {
+           
             var buyOrdersTask = await _dbContext.Orders
                                           .Where(o => o.OrderType == OrderType.Buy)
                                           .ToListAsync();
@@ -53,7 +54,7 @@ namespace Application.Services
 
             var theOrder =  _dbContext.Orders.Add(_mapper.Map<Order>(order));
 
-            await _dbContext.SaveChangesAsync();
+             _dbContext.SaveChanges();
 
             _matchingEngine.MatchOrders();
             
@@ -66,7 +67,7 @@ namespace Application.Services
 
             var theOrder =  _dbContext.Orders.Add(_mapper.Map<Order>(order));
 
-            await _dbContext.SaveChangesAsync();
+             _dbContext.SaveChanges();
             
             _matchingEngine.MatchOrders();
 

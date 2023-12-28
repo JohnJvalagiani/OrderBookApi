@@ -1,12 +1,14 @@
-﻿using System.Net;
+﻿using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 
 namespace OrderBook.API.Middleware
 {
-    public class ExceptionMiddleware
+    public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
 
-        public ExceptionMiddleware(RequestDelegate next)
+        public ExceptionHandlingMiddleware(RequestDelegate next)
         {
             _next = next;
         }
@@ -17,29 +19,24 @@ namespace OrderBook.API.Middleware
             {
                 await _next(context);
             }
-            catch (ArgumentNullException ex)
+            catch (ValidationException ex)
             {
+                var validationErrors = ex.Message;
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await context.Response.WriteAsync($"ArgumentNullException: {ex.Message}");
-            }
-            catch (InvalidOperationException ex)
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await context.Response.WriteAsync($"InvalidOperationException: {ex.Message}");
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonConvert.SerializeObject(validationErrors));
             }
             catch (Exception ex)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await context.Response.WriteAsync($"Internal Server Error: {ex.Message}");
+                context.Response.ContentType = "application/json";
+                var errorResponse = new ErrorResponse
+                {
+                    Message = "An error occurred.",
+                    Details = ex.Message
+                };
+                await context.Response.WriteAsync(JsonConvert.SerializeObject(errorResponse));
             }
-        }
-    }
-
-    public static class ExceptionMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<ExceptionMiddleware>();
         }
     }
 }
