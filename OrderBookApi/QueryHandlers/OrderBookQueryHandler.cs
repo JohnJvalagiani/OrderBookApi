@@ -17,8 +17,8 @@ namespace OrderBook.API.QueryHandlers
             var orderBook =  _orderBookService.GetOrderBook().Result;
             return new OrderBookResponse
             {
-                BuyOrders = orderBook.BuyOrders,
-                SellOrders = orderBook.SellOrders
+                BuyOrders = orderBook.Data.BuyOrders,
+                SellOrders = orderBook.Data.SellOrders
             };
         }
     }

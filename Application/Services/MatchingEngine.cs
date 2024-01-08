@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +12,7 @@ namespace Application.Services
 {
     public class MatchingEngine
     {
+        private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         private readonly OrderBookContext _dbContext;
 
         public MatchingEngine(OrderBookContext dbContext)
@@ -20,7 +22,11 @@ namespace Application.Services
 
         public async Task MatchOrders()
         {
-          
+            await semaphoreSlim.WaitAsync();
+
+             try
+             {
+
                 var buyOrdersTask = _dbContext.Orders
              .Where(o => o.OrderType == OrderType.Buy)
              .ToList();
@@ -57,8 +63,17 @@ namespace Application.Services
                         // No match, move to the next sell order
                         sellIndex++;
                     }
+             }
+           
             }
-         
+            catch(Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
 
         }
 

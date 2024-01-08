@@ -11,10 +11,10 @@ namespace Application.Interfaces
 {
     public interface IOrderBookService
     {
-       public Task<OrderBookModel> GetOrderBook();
-       public Task<ReadOrderDto> PlaceBuyOrder(WriteOrderDto order);
-       public Task<ReadOrderDto> PlaceSellOrder(WriteOrderDto order);
-       public Task<WriteOrderDto> UpdateOrder(int orderId, WriteOrderDto updatedOrder);
-       public Task<bool> DeleteOrder(int orderId);
+       public Task<ServiceResponse<OrderBookModel>> GetOrderBook();
+       public Task<ServiceResponse<ReadOrderDto>> PlaceBuyOrder(WriteOrderDto order);
+       public Task<ServiceResponse<ReadOrderDto>> PlaceSellOrder(WriteOrderDto order);
+       public Task<ServiceResponse<WriteOrderDto>> UpdateOrder(int orderId, WriteOrderDto updatedOrder);
+       public Task<ServiceResponse<bool>> DeleteOrder(int orderId);
     }
 }
