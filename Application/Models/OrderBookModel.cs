@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DTOs
+namespace Application.Models
 {
-    public class OrderBookModel
+    public record OrderBookModel
     {
         public IEnumerable<ReadOrderDto> BuyOrders { get; set; }
         public IEnumerable<ReadOrderDto> SellOrders { get; set; }

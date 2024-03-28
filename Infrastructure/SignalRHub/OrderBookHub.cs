@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.SignalR;
-using OrderBook.API.Models.QueryModels;
+﻿using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace OrderBook.API.SignalRHub
+namespace Infrastructure.SignalRHub
 {
   
     public class OrderBookHub : Hub
@@ -18,8 +16,6 @@ namespace OrderBook.API.SignalRHub
         {
             await Clients.All.SendAsync("ReceiveMessage", "");
         }
-
-
     }
 
 }

@@ -1,4 +1,4 @@
-﻿namespace OrderBook.API.CommandHandlers
+﻿namespace OrderBook.Application.Features.CommandHandlers
 {
     public interface ICommandHandler<TCommand>
     {

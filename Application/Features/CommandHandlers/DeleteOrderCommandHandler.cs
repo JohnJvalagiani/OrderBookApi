@@ -1,9 +1,8 @@
 ﻿using Application.Interfaces;
 using FluentValidation;
-using OrderBook.API.DTOs;
 using OrderBook.API.Models.CommandModels;
 
-namespace OrderBook.API.CommandHandlers
+namespace OrderBook.Application.Features.CommandHandlers
 {
     public class DeleteOrderCommandHandler : ICommandHandler<DeleteOrderCommand>
     {

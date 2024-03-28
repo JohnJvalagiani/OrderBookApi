@@ -1,32 +1,31 @@
 ﻿using Application.Interfaces;
+using Application.Models;
 using FluentValidation;
-using OrderBook.API.DTOs;
 using OrderBook.API.Models.CommandModels;
+using System.ComponentModel.DataAnnotations;
 
-namespace OrderBook.API.CommandHandlers
+namespace OrderBook.Application.Features.CommandHandlers
 {
-    public class PlaceSellOrderCommandHandler : ICommandHandler<PlaceSellOrderCommand>
+    public class PlaceBuyOrderCommandHandler : ICommandHandler<PlaceBuyOrderCommand>
     {
-        private readonly IValidator<PlaceSellOrderCommand> _validator;
-
+        private readonly IValidator<PlaceBuyOrderCommand> _validator;
         private readonly IOrderBookService _orderBookService;
 
-        public PlaceSellOrderCommandHandler(IOrderBookService orderBookService, IValidator<PlaceSellOrderCommand> validator)
+        public PlaceBuyOrderCommandHandler(IOrderBookService orderBookService, IValidator<PlaceBuyOrderCommand> validator)
         {
             _validator = validator;
             _orderBookService = orderBookService;
         }
-
-        public void Handle(PlaceSellOrderCommand command)
+        public void Handle(PlaceBuyOrderCommand command)
         {
-            var validationResult = _validator.ValidateAsync(command).Result;
+            var validationResult =  _validator.ValidateAsync(command).Result;
 
             if (!validationResult.IsValid)
             {
                 throw new FluentValidation.ValidationException(validationResult.Errors);
             }
 
-            _orderBookService.PlaceSellOrder(new WriteOrderDto
+            _orderBookService.PlaceBuyOrder(new WriteOrderDto
             {
                 UserId = command.UserId,
                 Quantity = command.Quantity,

@@ -1,54 +1,29 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using OrderBook.API.CommandHandlers;
 using OrderBook.API.Models.CommandModels;
 using OrderBook.API.Models.QueryModels;
 using OrderBook.API.QueryHandlers;
-using OrderBook.API.SignalRHub;
 using Newtonsoft.Json;
-using Entities;
+using Domain;
+using MassTransit.Mediator;
+using Infrastructure.SignalRHub;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrderBookController : ControllerBase
+public class OrderBookController(IMediator mediator, IHubContext<OrderBookHub> orderBookHubContext) : ControllerBase
 {
-    private readonly ICommandHandler<PlaceBuyOrderCommand> _placeBuyOrderCommandHandler;
-    private readonly ICommandHandler<PlaceSellOrderCommand> _placeSellOrderCommandHandler;
-    private readonly ICommandHandler<UpdateOrderCommand> _updateOrderCommandHandler;
-    private readonly ICommandHandler<DeleteOrderCommand> _deleteOrderCommandHandler;
-    private readonly IQueryHandler<OrderBookQuery, OrderBookResponse> _orderBookQueryHandler;
-    private readonly IHubContext<OrderBookHub> _orderBookHubContext;
-
-    public OrderBookController(
-        ICommandHandler<PlaceBuyOrderCommand> placeBuyOrderCommandHandler,
-        ICommandHandler<PlaceSellOrderCommand> placeSellOrderCommandHandler,
-        ICommandHandler<UpdateOrderCommand> updateOrderCommandHandler,
-        ICommandHandler<DeleteOrderCommand> deleteOrderCommandHandler,
-        IQueryHandler<OrderBookQuery, OrderBookResponse> orderBookQueryHandler,
-        IHubContext<OrderBookHub> orderBookHubContext)
-    {
-        _placeBuyOrderCommandHandler = placeBuyOrderCommandHandler;
-        _placeSellOrderCommandHandler = placeSellOrderCommandHandler;
-        _updateOrderCommandHandler = updateOrderCommandHandler;
-        _deleteOrderCommandHandler = deleteOrderCommandHandler;
-        _orderBookQueryHandler = orderBookQueryHandler;
-        _orderBookHubContext = orderBookHubContext;
-    }
 
     [HttpGet]
     public async Task<ActionResult<OrderBookResponse>> GetOrderBook()
     {
-
-        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
-       
-
+           var orderBook = mediator.Send(new OrderBookQuery());
             return Ok(orderBook);
     }
 
     [HttpPost("buy")]
     public ActionResult PlaceBuyOrder(PlaceBuyOrderCommand command)
     {
-            _placeBuyOrderCommandHandler.Handle(command);
+            mediator.Send(command);
             NotifyOrderBookUpdate();
             return Ok();
     }
@@ -56,7 +31,7 @@ public class OrderBookController : ControllerBase
     [HttpPost("sell")]
     public ActionResult PlaceSellOrder(PlaceSellOrderCommand command)
     {
-            _placeSellOrderCommandHandler.Handle(command);
+            mediator.Send(command);
             NotifyOrderBookUpdate();
             return Ok();
     }
@@ -64,7 +39,7 @@ public class OrderBookController : ControllerBase
     [HttpPut("update")]
     public ActionResult UpdateOrder(UpdateOrderCommand command)
     {
-            _updateOrderCommandHandler.Handle(command);
+            mediator.Send(command);
             NotifyOrderBookUpdate();
             return Ok();
     }
@@ -72,15 +47,15 @@ public class OrderBookController : ControllerBase
     [HttpDelete("delete/{orderId}")]
     public ActionResult DeleteOrder(int orderId)
     {
-            _deleteOrderCommandHandler.Handle(new DeleteOrderCommand { OrderId = orderId });
+            mediator.Send(new DeleteOrderCommand { OrderId = orderId });
             NotifyOrderBookUpdate();
             return Ok();
     }
 
     private async Task NotifyOrderBookUpdate()
     {
-        var orderBook = _orderBookQueryHandler.HandleAsync(new OrderBookQuery());
+        var orderBook = mediator.Send(new OrderBookQuery());
         var OrdersJson = JsonConvert.SerializeObject(orderBook);
-        await _orderBookHubContext.Clients.All.SendAsync("ReceiveMessage", OrdersJson);
+        await orderBookHubContext.Clients.All.SendAsync("ReceiveMessage", OrdersJson);
     }
 }

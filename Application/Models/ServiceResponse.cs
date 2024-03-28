@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DTOs
+namespace Application.Models
 {
-    public class ServiceResponse<TResult>
+    public record ServiceResponse<TResult>
     {
         public bool IsSuccess { get; set; }
         public TResult Data { get; set; }

@@ -1,9 +1,15 @@
-﻿using Entities;
+﻿using Domain;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace OrderBook.API.DTOs
+namespace Application.Models
 {
-    public class WriteOrderDto
+    public record ReadOrderDto
     {
+        public int OrderId { get; set; }
         public string UserId { get; set; }
         public decimal Quantity { get; set; }
         public decimal Price { get; set; }

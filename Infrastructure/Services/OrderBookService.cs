@@ -1,18 +1,17 @@
 ﻿using Application.CustomExceptions;
 using Application.Interfaces;
 using AutoMapper;
-using DTOs;
-using Entities;
+using Domain;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
-using OrderBook.API.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Models;
 
-namespace Application.Services
+namespace Infrastructure.Services
 {
     public class OrderBookService : IOrderBookService
     {

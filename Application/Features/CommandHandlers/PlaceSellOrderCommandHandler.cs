@@ -1,32 +1,32 @@
 ﻿using Application.Interfaces;
-using Azure.Identity;
+using Application.Models;
 using FluentValidation;
-using OrderBook.API.DTOs;
 using OrderBook.API.Models.CommandModels;
-using System.ComponentModel.DataAnnotations;
 
-namespace OrderBook.API.CommandHandlers
+namespace OrderBook.Application.Features.CommandHandlers
 {
-    public class PlaceBuyOrderCommandHandler : ICommandHandler<PlaceBuyOrderCommand>
+    public class PlaceSellOrderCommandHandler : ICommandHandler<PlaceSellOrderCommand>
     {
-        private readonly IValidator<PlaceBuyOrderCommand> _validator;
+        private readonly IValidator<PlaceSellOrderCommand> _validator;
+
         private readonly IOrderBookService _orderBookService;
 
-        public PlaceBuyOrderCommandHandler(IOrderBookService orderBookService, IValidator<PlaceBuyOrderCommand> validator)
+        public PlaceSellOrderCommandHandler(IOrderBookService orderBookService, IValidator<PlaceSellOrderCommand> validator)
         {
             _validator = validator;
             _orderBookService = orderBookService;
         }
-        public void Handle(PlaceBuyOrderCommand command)
+
+        public void Handle(PlaceSellOrderCommand command)
         {
-            var validationResult =  _validator.ValidateAsync(command).Result;
+            var validationResult = _validator.ValidateAsync(command).Result;
 
             if (!validationResult.IsValid)
             {
                 throw new FluentValidation.ValidationException(validationResult.Errors);
             }
 
-            _orderBookService.PlaceBuyOrder(new WriteOrderDto
+            _orderBookService.PlaceSellOrder(new WriteOrderDto
             {
                 UserId = command.UserId,
                 Quantity = command.Quantity,

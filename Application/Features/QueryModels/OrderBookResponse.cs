@@ -1,6 +1,6 @@
 ﻿
-using DTOs;
-using OrderBook.API.DTOs;
+
+using Application.Models;
 
 namespace OrderBook.API.Models.QueryModels
 {

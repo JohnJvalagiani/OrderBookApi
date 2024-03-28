@@ -1,4 +1,4 @@
-﻿using Entities;
+﻿using Domain;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,17 +8,11 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Services
+namespace Infrastructure.Services
 {
-    public class MatchingEngine
+    public class MatchingEngine(OrderBookContext dbContext)
     {
         private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
-        private readonly OrderBookContext _dbContext;
-
-        public MatchingEngine(OrderBookContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
 
         public async Task MatchOrders()
         {
@@ -27,11 +21,11 @@ namespace Application.Services
              try
              {
 
-                var buyOrdersTask = _dbContext.Orders
+             var buyOrdersTask = dbContext.Orders
              .Where(o => o.OrderType == OrderType.Buy)
              .ToList();
 
-                var sellOrdersTask = _dbContext.Orders
+                var sellOrdersTask = dbContext.Orders
                     .Where(o => o.OrderType == OrderType.Sell)
                     .ToList();
 
@@ -86,15 +80,15 @@ namespace Application.Services
 
             if (buyOrder.Quantity == 0)
             {
-                _dbContext.Orders.Remove(buyOrder);
+                dbContext.Orders.Remove(buyOrder);
             }
 
             if (sellOrder.Quantity == 0)
             {
-                _dbContext.Orders.Remove(sellOrder);
+                dbContext.Orders.Remove(sellOrder);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 

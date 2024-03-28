@@ -1,4 +1,4 @@
-﻿using Entities;
+﻿using Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,6 @@ namespace Infrastructure.Database
     {
         public OrderBookContext(DbContextOptions<OrderBookContext> options) : base(options)
         {
-                
         }
         public DbSet<Order> Orders { get; set; }
 

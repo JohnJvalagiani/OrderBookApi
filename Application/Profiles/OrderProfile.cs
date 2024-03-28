@@ -1,7 +1,6 @@
-﻿using AutoMapper;
-using DTOs;
-using Entities;
-using OrderBook.API.DTOs;
+﻿using Application.Models;
+using AutoMapper;
+using Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;

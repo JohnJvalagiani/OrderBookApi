@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using OrderBook.API.Models.CommandModels;
 
-namespace OrderBook.API.Validators
+namespace Application.Validators
 {
     public class BuyOrderValidator : AbstractValidator<PlaceBuyOrderCommand>
     {
